@@ -1,0 +1,14 @@
+{
+  "name": "waterhub-telegram-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Telegram-бот і Mini App WaterHub: підбір системи водопідготовки за аналізом води та створення замовлення в KeyCRM",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "set-webhook": "node scripts/set-webhook.js",
+    "keycrm:sources": "node scripts/keycrm-sources.js"
+  }
+}

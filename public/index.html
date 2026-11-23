@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WaterHub — підбір системи</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #fff);
+    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f5);
+    --fg: var(--tg-theme-text-color, #111);
+    --hint: var(--tg-theme-hint-color, #8a8f98);
+    --accent: var(--tg-theme-button-color, #2481cc);
+    --accent-fg: var(--tg-theme-button-text-color, #fff);
+    --danger: var(--tg-theme-destructive-text-color, #d93a3a);
+    --line: color-mix(in srgb, var(--hint) 25%, transparent);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg2); color: var(--fg); font: 15px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding-bottom: 90px; }
+  section { background: var(--bg); margin: 10px 0; padding: 12px 16px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--hint); margin: 0 0 10px; font-weight: 600; }
+  .seg { display: flex; background: var(--bg2); border-radius: 10px; padding: 3px; margin-bottom: 10px; }
+  .seg button { flex: 1; border: 0; background: transparent; color: var(--fg); padding: 8px 4px; border-radius: 8px; font: inherit; font-size: 14px; }
+  .seg button.on { background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+  label { display: block; font-size: 12px; color: var(--hint); }
+  input, textarea, select { width: 100%; font: inherit; color: var(--fg); background: var(--bg2); border: 1px solid transparent; border-radius: 8px; padding: 8px 10px; margin-top: 3px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg); margin-top: 10px; }
+  .check input { width: auto; margin: 0; }
+  .stage { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .stage:last-child { border-bottom: 0; }
+  .stage b { display: block; }
+  .stage small { color: var(--hint); display: block; }
+  .stage .note { font-size: 13px; }
+  .warn { color: var(--danger); font-size: 13px; margin: 6px 0 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 6px 0; vertical-align: middle; border-bottom: 1px solid var(--line); }
+  td.n { width: 54px; } td.p { width: 84px; } td.x { width: 26px; text-align: right; }
+  td input { padding: 5px 6px; margin: 0; text-align: right; }
+  td input.missing { border-color: var(--danger); }
+  .rm { border: 0; background: none; color: var(--hint); font-size: 18px; padding: 0; }
+  .total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; padding-top: 10px; }
+  .muted { color: var(--hint); font-size: 13px; }
+  .done { text-align: center; padding: 30px 16px; }
+  .done a { color: var(--accent); }
+  #fallbackBtn { display: none; position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 14px; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="app">
+  <section>
+    <h2>Джерело та сегмент</h2>
+    <div class="seg" data-name="source"><button data-v="well" class="on">Свердловина / колодязь</button><button data-v="central">Централізоване</button></div>
+    <div class="seg" data-name="segment"><button data-v="mass" class="on">Масовий · Runxin</button><button data-v="premium">Преміум · Clack</button></div>
+  </section>
+
+  <section>
+    <h2>Аналіз води</h2>
+    <div class="grid">
+      <label>Залізо Fe, мг/л<input inputmode="decimal" name="fe"></label>
+      <label>Марганець Mn, мг/л<input inputmode="decimal" name="mn"></label>
+      <label>Жорсткість, мг-екв/л<input inputmode="decimal" name="hardness"></label>
+      <label>pH<input inputmode="decimal" name="ph"></label>
+      <label>Окиснюваність, мгO₂/л<input inputmode="decimal" name="oxidability"></label>
+      <label>Амоній, мг/л<input inputmode="decimal" name="ammonium"></label>
+      <label>Нітрати, мг/л<input inputmode="decimal" name="nitrates"></label>
+      <label>Каламутність, NTU<input inputmode="decimal" name="turbidity"></label>
+      <label>Кольоровість, °<input inputmode="decimal" name="color"></label>
+    </div>
+    <label class="check"><input type="checkbox" name="h2s"> Запах сірководню (H₂S)</label>
+    <label class="check" id="chlorineRow" hidden><input type="checkbox" name="chlorine" checked> Хлор / запах хлору</label>
+  </section>
+
+  <section>
+    <h2>Споживання</h2>
+    <div class="grid">
+      <label>Мешканців<input inputmode="numeric" name="people" value="3"></label>
+      <label>Санвузлів<input inputmode="numeric" name="baths" value="1"></label>
+      <label>Пікова витрата, м³/год<input inputmode="decimal" name="flow" placeholder="авто"></label>
+    </div>
+  </section>
+
+  <section id="result"><h2>Рекомендована система</h2><p class="muted">Введіть показники аналізу.</p></section>
+
+  <section id="spec" hidden>
+    <h2>Специфікація (можна редагувати)</h2>
+    <table><tbody id="lines"></tbody></table>
+    <select id="addItem" style="margin-top:10px"><option value="">+ Додати позицію з каталогу…</option></select>
+    <div class="total"><span>Разом</span><span id="total">0 грн</span></div>
+  </section>
+
+  <section>
+    <h2>Клієнт</h2>
+    <label>ПІБ<input name="name" autocomplete="name"></label>
+    <label style="margin-top:8px">Телефон<input name="phone" inputmode="tel" placeholder="+380" autocomplete="tel"></label>
+    <label style="margin-top:8px">Місто / адреса<input name="address"></label>
+    <label style="margin-top:8px">Коментар<textarea name="comment" rows="2"></textarea></label>
+  </section>
+  <p class="warn" id="err" style="padding:0 16px"></p>
+</div>
+<button id="fallbackBtn">Створити замовлення в KeyCRM</button>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready(); tg?.expand();
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const money = (n) => Math.round(n || 0).toLocaleString('uk-UA') + ' грн';
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const state = { source: 'well', segment: 'mass', lines: [], selection: null, catalog: [], busy: false };
+const WATER = ['fe','mn','hardness','ph','oxidability','ammonium','nitrates','turbidity','color','people','baths','flow'];
+
+function setSeg(name, v) {
+  state[name] = v;
+  $$(`.seg[data-name="${name}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  if (name === 'source') $('#chlorineRow').hidden = v !== 'central';
+}
+$$('.seg').forEach((seg) => seg.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  setSeg(seg.dataset.name, b.dataset.v); tg?.HapticFeedback?.selectionChanged(); recalc();
+}));
+
+function params() {
+  const p = { source: state.source, segment: state.segment };
+  for (const k of WATER) { const v = $(`[name="${k}"]`).value.trim(); if (v) p[k] = v.replace(',', '.'); }
+  p.h2s = $('[name="h2s"]').checked;
+  if (state.source === 'central') p.chlorine = $('[name="chlorine"]').checked;
+  return p;
+}
+
+// Префіл з бота (?d=base64url JSON)
+try {
+  const d = new URLSearchParams(location.search).get('d');
+  if (d) {
+    const data = JSON.parse(decodeURIComponent(escape(atob(d.replace(/-/g, '+').replace(/_/g, '/')))));
+    if (data.source) setSeg('source', data.source);
+    if (data.segment) setSeg('segment', data.segment);
+    for (const k of [...WATER, 'name', 'phone', 'address']) if (data[k] != null) $(`[name="${k}"]`).value = data[k];
+    if (data.h2s) $('[name="h2s"]').checked = true;
+    if (data.chlorine === false) $('[name="chlorine"]').checked = false;
+  }
+} catch (e) { console.warn('prefill', e); }
+
+let timer;
+function recalc() { clearTimeout(timer); timer = setTimeout(runSelect, 300); }
+document.addEventListener('input', (e) => { if (WATER.includes(e.target.name)) recalc(); });
+document.addEventListener('change', (e) => { if (['h2s','chlorine'].includes(e.target.name)) recalc(); });
+
+async function runSelect() {
+  const p = params();
+  const hasData = ['fe','mn','hardness','ph','oxidability','ammonium','nitrates','turbidity','color'].some((k) => p[k]) || p.h2s || p.chlorine;
+  if (!hasData) { $('#result').innerHTML = '<h2>Рекомендована система</h2><p class="muted">Введіть показники аналізу.</p>'; $('#spec').hidden = true; updateButton(); return; }
+  const r = await fetch('/api/select', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+  const sel = await r.json();
+  state.selection = sel;
+  state.lines = sel.lines.map((l) => ({ ...l }));
+  renderResult(sel); renderLines(); updateButton();
+}
+
+function renderResult(sel) {
+  let h = `<h2>Рекомендована система</h2><p class="muted">Пікова витрата ${sel.flow} м³/год · споживання ${sel.dailyM3} м³/добу</p>`;
+  sel.stages.forEach((s, i) => {
+    h += `<div class="stage"><b>${i + 1}. ${esc(s.title)} — колона ${s.column}</b><small>${esc(s.why)}</small>`;
+    s.notes.forEach((n) => { h += `<div class="note">• ${esc(n)}</div>`; });
+    h += '</div>';
+  });
+  sel.warnings.forEach((w) => { h += `<p class="warn">⚠️ ${esc(w)}</p>`; });
+  $('#result').innerHTML = h;
+}
+
+function renderLines() {
+  $('#spec').hidden = !state.lines.length;
+  $('#lines').innerHTML = state.lines.map((l, i) => `
+    <tr>
+      <td>${esc(l.name)}<br><span class="muted">${esc(l.sku)}</span></td>
+      <td class="n"><input inputmode="numeric" data-i="${i}" data-f="qty" value="${l.qty}"></td>
+      <td class="p"><input inputmode="decimal" data-i="${i}" data-f="price" value="${l.price ?? ''}" placeholder="ціна" class="${l.price ? '' : 'missing'}"></td>
+      <td class="x"><button class="rm" data-rm="${i}" aria-label="Видалити">×</button></td>
+    </tr>`).join('');
+  updateTotal();
+}
+$('#lines').addEventListener('input', (e) => {
+  const { i, f } = e.target.dataset; if (i == null) return;
+  const v = Number(e.target.value.replace(',', '.'));
+  state.lines[i][f] = Number.isFinite(v) && e.target.value !== '' ? v : null;
+  if (f === 'price') e.target.classList.toggle('missing', !state.lines[i].price);
+  updateTotal(); updateButton();
+});
+$('#lines').addEventListener('click', (e) => {
+  const i = e.target.dataset.rm; if (i == null) return;
+  state.lines.splice(Number(i), 1); renderLines(); updateButton();
+});
+function updateTotal() { $('#total').textContent = money(state.lines.reduce((s, l) => s + (l.qty || 0) * (l.price || 0), 0)); }
+
+fetch('/api/catalog').then((r) => r.json()).then((c) => {
+  state.catalog = c;
+  $('#addItem').insertAdjacentHTML('beforeend', c.map((p) => `<option value="${esc(p.sku)}">${esc(p.name)}</option>`).join(''));
+});
+$('#addItem').addEventListener('change', (e) => {
+  const p = state.catalog.find((x) => x.sku === e.target.value); e.target.value = '';
+  if (!p) return;
+  const ex = state.lines.find((l) => l.sku === p.sku);
+  if (ex) ex.qty += 1; else state.lines.push({ sku: p.sku, name: p.name, unit: p.unit, qty: 1, price: p.price });
+  renderLines(); updateButton();
+});
+
+document.addEventListener('input', (e) => { if (['name','phone'].includes(e.target.name)) updateButton(); });
+
+function ready() {
+  return state.lines.length && $('[name="name"]').value.trim() && $('[name="phone"]').value.replace(/\D/g, '').length >= 10;
+}
+const fb = $('#fallbackBtn');
+function updateButton() {
+  const ok = ready();
+  if (tg?.initData) {
+    tg.MainButton.setText('Створити замовлення в KeyCRM');
+    ok ? tg.MainButton.show() : tg.MainButton.hide();
+  } else {
+    fb.style.display = ok ? 'block' : 'none';
+  }
+}
+
+async function submit() {
+  if (state.busy) return;
+  $('#err').textContent = '';
+  const missing = state.lines.filter((l) => !l.price || !l.qty);
+  if (missing.length) { $('#err').textContent = 'Вкажіть ціну та кількість для всіх позицій.'; return; }
+  state.busy = true; tg?.MainButton.showProgress();
+  try {
+    const r = await fetch('/api/order', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: tg?.initData || '',
+        params: params(),
+        lines: state.lines.map(({ sku, qty, price }) => ({ sku, qty, price })),
+        client: { name: $('[name="name"]').value.trim(), phone: $('[name="phone"]').value.trim(), address: $('[name="address"]').value.trim() },
+        comment: $('[name="comment"]').value.trim(),
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Помилка');
+    tg?.HapticFeedback?.notificationOccurred('success');
+    tg?.MainButton.hide(); fb.style.display = 'none';
+    $('#app').innerHTML = `<section class="done"><h1>✅</h1><p><b>Замовлення №${esc(data.id)} створено</b><br>${money(data.total)}</p>${data.url ? `<p><a href="${esc(data.url)}" target="_blank">Відкрити в KeyCRM</a></p>` : ''}<p class="muted">Підтвердження надіслано в чат.</p></section>`;
+    setTimeout(() => tg?.close(), 2500);
+  } catch (e) {
+    tg?.HapticFeedback?.notificationOccurred('error');
+    $('#err').textContent = '❌ ' + e.message;
+  } finally {
+    state.busy = false; tg?.MainButton.hideProgress();
+  }
+}
+tg?.MainButton.onClick(submit);
+fb.addEventListener('click', submit);
+
+runSelect();
+</script>
+</body>
+</html>
