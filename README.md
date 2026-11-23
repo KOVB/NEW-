@@ -81,6 +81,8 @@ public/index.html Mini App
 server.js         сервер для self-hosting
 ```
 
+Імпорт каталогу в KeyCRM (група «Водопідготовка», підгрупи, ціни 100/200): `node scripts/keycrm-import-catalog.js` — перегляд, з `--apply` — створення. Повторний запуск пропускає наявне.
+
 Тести: `npm test`.
 
 ## Безпека
