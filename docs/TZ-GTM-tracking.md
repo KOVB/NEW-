@@ -182,4 +182,11 @@
 - Нова змінна `CJS - contact_type` за `Click URL`: phone / viber / telegram / whatsapp / email / instagram / facebook / tiktok / other.
 - Тег 55 GA4 `contact_click` передає `contact_type`.
 - Перевірено на живому сайті з повним перехопленням (у GA4 нічого не пішло): клік на `tel:` → `contact_click` з `contact_type=phone`, клік на `t.me` → `contact_type=telegram`.
-- Наступний крок у GA4: створити подію `contact_lead` (умова `contact_type` = phone, viber, telegram або whatsapp) і позначити її ключовою.
+**GA4 (ресурс 274866438), 24.11.2026 — блок 3.1 і частина 2.2 / 3.3:**
+- Створено подію `contact_lead`: `event_name` = `contact_click` І `contact_type` відповідає `^(phone|viber|telegram|whatsapp)$`, параметри копіюються. Позначено ключовою, підрахунок — один раз за сеанс, без цінності за замовчуванням.
+- Знято позначку ключової події з `ads_conversion___1` і `ads_conversion_PURCHASE_1`. Остання — це спеціальна подія з `page_view` на `/oplata-tovara/uspishna-oplata`, дубль `purchase`. Правило не видаляли.
+- **Ключові події тепер:** `contact_lead`, `generate_lead`, `purchase`.
+- Розширене вимірювання: вимкнено «Взаємодії з формою». Прокручування, кліки зовнішніх посилань, пошук, відео й файли залишились.
+- Тег Google (G-GTT8T7SMQJ тепер має інтерфейс контейнера GTM): додано небажані переходи `liqpay.ua`, `monobank.ua`, `wayforpay.com`, `tagassistant.google.com`, `weblium.com`. Опубліковано версію 11. Після публікації сайт і далі надсилає `page_view` у GA4 (перевірено).
+- Правил «Змінити події», які створюють `GA4` або `Click`, у ресурсі немає. Отже, джерело — вбудована інтеграція Weblium (пункт 2.2, потрібен доступ до Weblium).
+- Не зроблено: внутрішній трафік (потрібна IP-адреса магазину на вул. Сковороди, 17).
