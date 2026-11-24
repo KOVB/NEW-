@@ -6,6 +6,8 @@ const tgCall = (id, urlMethod, fields, x, y) => ({
   id, module: 'telegram:UniversalAPICall', version: 1, parameters: { __IMTCONN__: conn },
   mapper: { urlMethod, method: 'POST', bodyType: 'assembled_body', body_spec: Object.entries(fields).map(([key, value]) => ({ key, value })) },
   metadata: { designer: { x, y } },
+  // збій службового виклику (стара кнопка, повідомлення вже змінене) не зупиняє сценарій
+  ...(['answerCallbackQuery', 'editMessageReplyMarkup'].includes(urlMethod) ? { onerror: [{ id: id * 100, module: 'builtin:Resume', version: 1, mapper: {}, metadata: { designer: { x: x, y: y + 150 } } }] } : {}),
 });
 const REPLY = { chat_id: '{{2.result.replyChatId}}', text: '{{2.result.replyText}}', parse_mode: 'HTML', disable_web_page_preview: 'true', reply_to_message_id: '{{2.result.replyToId}}', allow_sending_without_reply: 'true', reply_markup: '{{2.result.replyMarkup}}' };
 const CB = { callback_query_id: '{{2.result.cbQueryId}}', text: '{{2.result.cbAnswerText}}', show_alert: '{{2.result.cbShowAlert}}' };
@@ -32,7 +34,7 @@ const bp = {
         { id: 8, module: 'http:MakeRequest', version: 4, metadata: { designer: { x: 1500, y: 300 } },
           parameters: { authenticationType: 'apiKey', apiKeyKeychain: key },
           mapper: { url: 'https://openapi.keycrm.app/v1/order', method: 'post', headers: [{ name: 'Accept', value: 'application/json' }],
-            contentType: 'json', inputMethod: 'jsonString', jsonStringBodyContent: '{{2.result.orderJson}}', parseResponse: true, stopOnHttpError: false } },
+            contentType: 'json', inputMethod: 'jsonString', jsonStringBodyContent: '{{2.result.orderJson}}', parseResponse: true, stopOnHttpError: false, allowRedirects: true, shareCookies: false, requestCompressedContent: true } },
         { id: 9, module: 'builtin:BasicRouter', version: 1, mapper: null, metadata: { designer: { x: 1800, y: 300 } }, routes: [
           { flow: [{ id: 10, module: 'telegram:UniversalAPICall', version: 1, parameters: { __IMTCONN__: conn }, metadata: { designer: { x: 2100, y: 150 } },
             filter: f('Успіх', '{{8.statusCode}}', 'number:less', '300'),
