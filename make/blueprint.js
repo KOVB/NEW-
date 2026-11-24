@@ -35,7 +35,7 @@ const bp = {
             filter: f('Успіх', '{{8.statusCode}}', 'number:less', '300'),
             mapper: { urlMethod: 'sendMessage', method: 'POST', bodyType: 'assembled_body', body_spec: [
               { key: 'chat_id', value: '{{2.result.chatId}}' }, { key: 'reply_to_message_id', value: '{{2.result.msgId}}' },
-              { key: 'text', value: '✅ Замовлення №{{8.data.id}} створено в KeyCRM\n👤 {{2.result.clientName}}\n💰 {{2.result.total}} грн{{if(2.result.missingCount > 0; "\n⚠️ Позицій без ціни: " + 2.result.missingCount + " — виправте ціни в KeyCRM"; "")}}' } ] } }] },
+              { key: 'text', value: '✅ Замовлення №{{8.data.id}} створено в KeyCRM\n👤 {{2.result.clientName}}\n💰 {{2.result.total}} грн\nПозицій без ціни: {{2.result.missingCount}} (якщо більше 0 — виправте ціни в KeyCRM)' } ] } }] },
           { flow: [{ id: 11, module: 'telegram:UniversalAPICall', version: 1, parameters: { __IMTCONN__: conn }, metadata: { designer: { x: 2100, y: 450 } },
             filter: f('Помилка', '{{8.statusCode}}', 'number:greaterorequal', '300'),
             mapper: { urlMethod: 'sendMessage', method: 'POST', bodyType: 'assembled_body', body_spec: [
