@@ -2,11 +2,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const [conn, hook, key] = process.argv.slice(2).map(Number);
 const code = readFileSync(new URL('./bot-code.js', import.meta.url), 'utf8');
-const tgCall = (id, urlMethod, body, x, y) => ({
+const tgCall = (id, urlMethod, fields, x, y) => ({
   id, module: 'telegram:UniversalAPICall', version: 1, parameters: { __IMTCONN__: conn },
-  mapper: { urlMethod, method: 'POST', bodyType: 'mapped_body', body },
+  mapper: { urlMethod, method: 'POST', bodyType: 'assembled_body', body_spec: Object.entries(fields).map(([key, value]) => ({ key, value })) },
   metadata: { designer: { x, y } },
 });
+const REPLY = { chat_id: '{{2.result.replyChatId}}', text: '{{2.result.replyText}}', parse_mode: 'HTML', disable_web_page_preview: 'true', reply_to_message_id: '{{2.result.replyToId}}', allow_sending_without_reply: 'true', reply_markup: '{{2.result.replyMarkup}}' };
+const CB = { callback_query_id: '{{2.result.cbQueryId}}', text: '{{2.result.cbAnswerText}}', show_alert: '{{2.result.cbShowAlert}}' };
+const CLEAR = { chat_id: '{{2.result.clearChatId}}', message_id: '{{2.result.clearMsgId}}', reply_markup: '{{2.result.emptyKeyboard}}' };
 const f = (name, a, o, b) => ({ name, conditions: [[{ a, o, b }]] });
 const bp = {
   name: 'WaterHub — Бот підбору систем → KeyCRM (Telegram)',
@@ -21,11 +24,11 @@ const bp = {
         ['cbMsgId', '{{1.callback_query.message.message_id}}'], ['cbText', '{{1.callback_query.message.text}}'],
       ].map(([name, value]) => ({ name, value })) } },
     { id: 3, module: 'builtin:BasicRouter', version: 1, mapper: null, metadata: { designer: { x: 600, y: 0 } }, routes: [
-      { flow: [{ ...tgCall(4, 'sendMessage', '{{2.result.reply}}', 900, -300), filter: f('Відповідь', '{{2.result.route}}', 'text:equal', 'reply') }] },
-      { flow: [{ ...tgCall(5, 'answerCallbackQuery', '{{2.result.cbAnswer}}', 900, 0), filter: f('Лише відповідь на кнопку', '{{2.result.route}}', 'text:equal', 'cbonly') }] },
+      { flow: [{ ...tgCall(4, 'sendMessage', REPLY, 900, -300), filter: f('Відповідь', '{{2.result.route}}', 'text:equal', 'reply') }] },
+      { flow: [{ ...tgCall(5, 'answerCallbackQuery', CB, 900, 0), filter: f('Лише відповідь на кнопку', '{{2.result.route}}', 'text:equal', 'cbonly') }] },
       { flow: [
-        { ...tgCall(6, 'answerCallbackQuery', '{{2.result.cbAnswer}}', 900, 300), filter: f('Створити замовлення', '{{2.result.route}}', 'text:equal', 'order') },
-        tgCall(7, 'editMessageReplyMarkup', '{{2.result.clearMarkup}}', 1200, 300),
+        { ...tgCall(6, 'answerCallbackQuery', CB, 900, 300), filter: f('Створити замовлення', '{{2.result.route}}', 'text:equal', 'order') },
+        tgCall(7, 'editMessageReplyMarkup', CLEAR, 1200, 300),
         { id: 8, module: 'http:MakeRequest', version: 4, metadata: { designer: { x: 1500, y: 300 } },
           parameters: { authenticationType: 'apiKey', apiKeyKeychain: key },
           mapper: { url: 'https://openapi.keycrm.app/v1/order', method: 'post', headers: [{ name: 'Accept', value: 'application/json' }],
@@ -46,5 +49,7 @@ const bp = {
     ] },
   ],
 };
+// маршрутизатори без mapper
+(function strip(fl) { for (const m of fl) { if (m.mapper === null) delete m.mapper; for (const r of m.routes || []) strip(r.flow); } })(bp.flow);
 writeFileSync(new URL('./blueprint.json', import.meta.url), JSON.stringify(bp, null, 1));
 console.log('make/blueprint.json written');

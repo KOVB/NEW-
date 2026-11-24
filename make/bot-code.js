@@ -521,7 +521,7 @@ function handle(inp) {
 
   // --- Повідомлення
   if (!inp.chatId) return res;
-  const reply = { chat_id: String(inp.chatId), parse_mode: 'HTML', disable_web_page_preview: true };
+  const reply = { chat_id: String(inp.chatId), parse_mode: 'HTML', disable_web_page_preview: true, reply_to_message_id: Number(inp.msgId) || undefined };
   res.route = 'reply';
   res.reply = reply;
   if (!allowed(inp.fromId)) { reply.text = `Доступ закрито. Ваш Telegram ID: <code>${escH(inp.fromId)}</code> — передайте його адміністратору.`; return res; }
@@ -539,10 +539,22 @@ function handle(inp) {
   } else if (sel.lines.length) {
     footer = '\n\nℹ️ Для замовлення додайте рядок «Клієнт: ПІБ, телефон» і надішліть ще раз.';
   }
-  reply.reply_to_message_id = Number(inp.msgId);
   reply.text = formatSelection(sel, client) + footer + `\n\n<blockquote expandable>${MARK}\n${escH(text)}</blockquote>`;
   if (reply.text.length > 4000) reply.text = reply.text.slice(0, 4000);
   return res;
 }
 
-return handle(input);
+// Make не розгортає вкладені об'єкти в тілі запиту — віддаємо пласкі поля, кнопки як JSON-рядок
+const r = handle(input);
+const EMPTY_KB = '{"inline_keyboard":[]}';
+r.replyChatId = r.reply ? r.reply.chat_id : '';
+r.replyText = r.reply ? r.reply.text : '';
+r.replyToId = r.reply && r.reply.reply_to_message_id ? r.reply.reply_to_message_id : '';
+r.replyMarkup = r.reply && r.reply.reply_markup ? JSON.stringify(r.reply.reply_markup) : EMPTY_KB;
+r.cbQueryId = r.cbAnswer ? r.cbAnswer.callback_query_id : '';
+r.cbAnswerText = r.cbAnswer && r.cbAnswer.text ? r.cbAnswer.text : '';
+r.cbShowAlert = !!(r.cbAnswer && r.cbAnswer.show_alert);
+r.clearChatId = r.clearMarkup ? String(r.clearMarkup.chat_id) : '';
+r.clearMsgId = r.clearMarkup ? r.clearMarkup.message_id : '';
+r.emptyKeyboard = EMPTY_KB;
+return r;
